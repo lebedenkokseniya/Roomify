@@ -1,26 +1,76 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { PieChart, Pie, Cell, Tooltip } from "recharts";
 
-const announcements = [
-  { id: 1, title: "Планове технічне обслуговування", date: "2025-06-20", message: "Сайт буде недоступний з 02:00 до 04:00 за Київським часом." },
-  { id: 2, title: "Нова функція бронювання", date: "2025-06-15", message: "Додано можливість вибору додаткових послуг при бронюванні номера." },
-  { id: 3, title: "Оновлення політики конфіденційності", date: "2025-06-01", message: "Перегляньте оновлену політику конфіденційності на сторінці з документами." }
+const defaultStats = [
+  { label: "Всього оголошень", value: 58 },
+  { label: "Активні", value: 43 },
+  { label: "В архіві", value: 15 },
 ];
 
+const defaultByType = [
+  { name: "Технічні", value: 22 },
+  { name: "Оновлення", value: 18 },
+  { name: "Інші", value: 18 },
+];
+
+const COLORS = ["#82ca9d", "#8884d8", "#ffc658"];
+
 export default function Announcements() {
+  const [stats, setStats] = useState(defaultStats);
+  const [byType, setByType] = useState(defaultByType);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const resStats = await fetch("/api/announcements/stats");
+        if (!resStats.ok) throw new Error("Failed to fetch stats");
+        const dataStats = await resStats.json();
+
+        const resTypes = await fetch("/api/announcements/types");
+        if (!resTypes.ok) throw new Error("Failed to fetch types");
+        const dataTypes = await resTypes.json();
+
+        setStats(dataStats);
+        setByType(dataTypes);
+      } catch (err) {
+        console.warn("Не вдалося завантажити статистику оголошень. Використовуються дефолтні значення.", err);
+      }
+    }
+    fetchData();
+  }, []);
+
   return (
-    <div className="space-y-6">
-      <div className="p-4 border rounded shadow">
-        <h2 className="font-semibold mb-4">Оголошення</h2>
-        <ul className="space-y-4">
-          {announcements.map(item => (
-            <li key={item.id} className="p-4 border rounded hover:shadow-md">
-              <h3 className="font-semibold text-lg">{item.title}</h3>
-              <p className="text-sm text-gray-500">{item.date}</p>
-              <p className="mt-2 text-sm">{item.message}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
+    <div className="p-4 space-y-8">
+      <h1 className="text-2xl font-bold mb-4">Аналітика оголошень</h1>
+
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {stats.map((item, idx) => (
+          <div key={idx} className="p-4 border rounded shadow text-center bg-white">
+            <div className="text-3xl font-bold">{item.value}</div>
+            <div className="text-sm text-gray-600 mt-1">{item.label}</div>
+          </div>
+        ))}
+      </section>
+
+      <section className="p-4 border rounded shadow bg-white max-w-md mx-auto">
+        <h2 className="font-semibold mb-2">Типи оголошень</h2>
+        <PieChart width={400} height={300}>
+          <Pie
+            data={byType}
+            cx={200}
+            cy={150}
+            outerRadius={120}
+            fill="#8884d8"
+            dataKey="value"
+            label
+          >
+            {byType.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip />
+        </PieChart>
+      </section>
     </div>
   );
 }

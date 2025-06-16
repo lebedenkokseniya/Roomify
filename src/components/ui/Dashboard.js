@@ -1,32 +1,64 @@
-import React from "react";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from "recharts";
+import React, { useEffect, useState } from "react";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
-const summaryData = [
-  { label: "Нові бронювання", value: 356 },
-  { label: "Актив. перебувань", value: 479 },
-  { label: "Заселилося", value: 216 },
-  { label: "Виселилося", value: 202 },
-  { label: "Дохід за сьогодні", value: "$40178" },
-  { label: "Нових юзерів", value: 432 },
+const DEFAULT_SUMMARY = [
+  { label: "Нові бронювання", value: 0 },
+  { label: "Актив. перебувань", value: 0 },
+  { label: "Заселилося", value: 0 },
+  { label: "Виселилося", value: 0 },
+  { label: "Дохід за сьогодні", value: "$0" },
+  { label: "Нових юзерів", value: 0 },
 ];
 
-const incomeData = [
-  { name: "Січ", income: 5000, expense: 1500 },
-  { name: "Лют", income: 7000, expense: 2500 },
-  { name: "Бер", income: 9000, expense: 3000 },
-  { name: "Кві", income: 8000, expense: 2500 },
-  { name: "Тра", income: 9500, expense: 4000 },
+const DEFAULT_INCOME = [
+  { name: "Січ", income: 0, expense: 0 },
+  { name: "Лют", income: 0, expense: 0 },
+  { name: "Бер", income: 0, expense: 0 },
+  { name: "Кві", income: 0, expense: 0 },
+  { name: "Тра", income: 0, expense: 0 },
 ];
 
-const pieData = [
-  { name: "Оплачено", value: 62 },
-  { name: "Очікує оплати", value: 24 },
-  { name: "Скасовано", value: 14 },
+const DEFAULT_PIE = [
+  { name: "Оплачено", value: 0 },
+  { name: "Очікує оплати", value: 0 },
+  { name: "Скасовано", value: 0 },
 ];
 
 const COLORS = ["#8884d8", "#82ca9d", "#ffc658"];
 
 export default function Dashboard() {
+  const [summaryData, setSummaryData] = useState(DEFAULT_SUMMARY);
+  const [incomeData, setIncomeData] = useState(DEFAULT_INCOME);
+  const [pieData, setPieData] = useState(DEFAULT_PIE);
+
+  useEffect(() => {
+    fetch("/api/dashboard/summary")
+      .then((res) => res.json())
+      .then((data) => setSummaryData(data))
+      .catch(() => setSummaryData(DEFAULT_SUMMARY));
+
+    fetch("/api/dashboard/income")
+      .then((res) => res.json())
+      .then((data) => setIncomeData(data))
+      .catch(() => setIncomeData(DEFAULT_INCOME));
+
+    fetch("/api/dashboard/pie")
+      .then((res) => res.json())
+      .then((data) => setPieData(data))
+      .catch(() => setPieData(DEFAULT_PIE));
+  }, []);
+
   return (
     <div className="space-y-6">
       <section className="grid grid-cols-2 md:grid-cols-3 gap-4">
