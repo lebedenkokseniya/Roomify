@@ -1,37 +1,68 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes, NavLink } from "react-router-dom";
-import { Home, Banknote, Bookmark, LayoutDashboard } from "lucide-react";
-import Dashboard from "./components/ui/Dashboard.js";
-import Finances from "./components/ui/Finances.js";
-import Bookings from "./components/ui/Bookings.js";
-import Announcements from "./components/ui/Announcements";
+import React, { useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
+import Dashboard from './components/ui/Dashboard';
+import Finances from './components/ui/Finances';
+import Bookings from './components/ui/Bookings';
+import Announcements from './components/ui/Announcements';
+import Login from './components/ui/Login';
+import Register from './components/ui/Register';
+import { AuthProvider, AuthContext } from './AuthContext';
+import { Home, Banknote, Bookmark, LayoutDashboard } from 'lucide-react';
 
-export default function App() {
+function Protected({ children }) {
+  const { user } = useContext(AuthContext);
+  return user ? children : <Navigate to="/login" replace />;
+}
+
+function App() {
+  const { user, logout } = useContext(AuthContext);
+
   return (
     <Router>
-      <div className="p-4 pb-16 space-y-6">
-        <header className="flex justify-between items-center">
+      <div className="p-4 pb-16">
+        <header className="flex justify-between items-center mb-6">
           <h1 className="text-xl font-bold">Roomify</h1>
           <div>
-            <span className="text-sm text-gray-600">Обліковий запис: Петро Леопард</span>
-            <button className="ml-4 text-red-500">Вихід ↩</button>
+            {user ? (
+              <>
+                <span className="text-sm text-gray-600">{user.email}</span>
+                <button onClick={logout} className="ml-4 text-red-500">Вихід</button>
+              </>
+            ) : (
+              <>  
+                <NavLink to="/login" className="text-blue-600 mr-4">Вхід</NavLink>
+                <NavLink to="/register" className="text-blue-600">Реєстрація</NavLink>
+              </>
+            )}
           </div>
         </header>
 
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/finances" element={<Finances />} />
-          <Route path="/bookings" element={<Bookings />} />
-          <Route path="/announcements" element={<Announcements />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/" element={<Protected><Dashboard /></Protected>} />
+          <Route path="/finances" element={<Protected><Finances /></Protected>} />
+          <Route path="/bookings" element={<Protected><Bookings /></Protected>} />
+          <Route path="/announcements" element={<Protected><Announcements /></Protected>} />
         </Routes>
 
-        <footer className="fixed bottom-0 left-0 right-0 bg-gray-100 border-t flex justify-around py-2">
-          <NavLink to="/" end className={({ isActive }) => isActive ? "text-blue-600" : "text-gray-500"}><Home /></NavLink>
-          <NavLink to="/finances" className={({ isActive }) => isActive ? "text-blue-600" : "text-gray-500"}><Banknote /></NavLink>
-          <NavLink to="/bookings" className={({ isActive }) => isActive ? "text-blue-600" : "text-gray-500"}><Bookmark /></NavLink>
-          <NavLink to="/announcements" className={({ isActive }) => isActive ? "text-blue-600" : "text-gray-500"}><LayoutDashboard /></NavLink>
-        </footer>
+        {user && (
+          <footer className="fixed bottom-0 left-0 right-0 bg-gray-100 border-t flex justify-around py-2">
+            <NavLink to="/" end className={({ isActive }) => isActive ? "text-blue-600" : "text-gray-500"}><Home /></NavLink>
+            <NavLink to="/finances" className={({ isActive }) => isActive ? "text-blue-600" : "text-gray-500"}><Banknote/></NavLink>
+            <NavLink to="/bookings" className={({ isActive }) => isActive ? "text-blue-600" : "text-gray-500"}><Bookmark/></NavLink>
+            <NavLink to="/announcements" className={({ isActive }) => isActive ? "text-blue-600" : "text-gray-500"}><LayoutDashboard/></NavLink>
+          </footer>
+        )}
       </div>
     </Router>
+  );
+}
+
+export default function Root() {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   );
 }
